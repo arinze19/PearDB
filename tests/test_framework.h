@@ -63,7 +63,7 @@ inline int failed_count = 0;
 // Run all registered tests
 inline int runAllTests()
 {
-    std::cout << "\n=== MiniDB Test Suite ===\n\n";
+    std::cout << "\n=== pearDB Test Suite ===\n\n";
 
     for (auto &test : getTests())
     {

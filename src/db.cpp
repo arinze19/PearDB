@@ -7,19 +7,19 @@
 #include <stdexcept> // provides cpp exception type: std::runtime_error
 
 // TODO: Insepct
-size_t MiniDB::encodeLocation(size_t segment_idx, size_t offset) const
+size_t pearDB::encodeLocation(size_t segment_idx, size_t offset) const
 {
     return (segment_idx << 32) | (offset & 0xFFFFFFFF);
 }
 
-std::pair<size_t, size_t> MiniDB::decodeLocation(size_t encoded) const
+std::pair<size_t, size_t> pearDB::decodeLocation(size_t encoded) const
 {
     size_t segment_idx = encoded >> 32;
     size_t offset = encoded & 0xFFFFFFFF;
     return {segment_idx, offset};
 }
 
-std::unique_ptr<Index> MiniDB::createIndex(IndexType type)
+std::unique_ptr<Index> pearDB::createIndex(IndexType type)
 {
     switch (type)
     {
@@ -33,7 +33,7 @@ std::unique_ptr<Index> MiniDB::createIndex(IndexType type)
     }
 }
 
-MiniDB::MiniDB(const std::string &dir, IndexType type) : data_dir(dir)
+pearDB::pearDB(const std::string &dir, IndexType type) : data_dir(dir)
 {
     if (!std::filesystem::exists(data_dir))
     {
@@ -49,7 +49,7 @@ MiniDB::MiniDB(const std::string &dir, IndexType type) : data_dir(dir)
 
     recoverFromWAL();
 
-    std::cout << "[MiniDB] Opened with "
+    std::cout << "[pearDB] Opened with "
               << (type == IndexType::HASH ? "HashIndex" : "BTreeIndex")
               << " | Keys: " << index->size() << " keys loaded"
               << " | Segments: " << segment_manager->segmentCount()
@@ -57,7 +57,7 @@ MiniDB::MiniDB(const std::string &dir, IndexType type) : data_dir(dir)
               << " | WAL: " << wal->size() << " Bytes" << std::endl;
 }
 
-void MiniDB::put(const std::string &key, const std::string &value)
+void pearDB::put(const std::string &key, const std::string &value)
 {
     std::lock_guard<std::mutex> lock(db_mutex);
 
@@ -67,13 +67,13 @@ void MiniDB::put(const std::string &key, const std::string &value)
 
     if (memtable->isFull())
     {
-        std::cout << "[MiniDB] Memtable full, flushing to disk... " << std::endl;
+        std::cout << "[pearDB] Memtable full, flushing to disk... " << std::endl;
 
         flushMemtableInternal();
     }
 }
 
-std::optional<std::string> MiniDB::get(const std::string &key)
+std::optional<std::string> pearDB::get(const std::string &key)
 {
     if (memtable->contains(key))
     {
@@ -85,7 +85,7 @@ std::optional<std::string> MiniDB::get(const std::string &key)
 
     if (!encoded.has_value())
     {
-        std::cout << "[MiniDB] key not found: " << key << "\n";
+        std::cout << "[pearDB] key not found: " << key << "\n";
         return std::nullopt;
     };
 
@@ -95,20 +95,20 @@ std::optional<std::string> MiniDB::get(const std::string &key)
 
     if (record->tombstone || !record.has_value())
     {
-        std::cout << "[MiniDB] key not found: " << key << "\n";
+        std::cout << "[pearDB] key not found: " << key << "\n";
         return std::nullopt;
     };
 
     return record->value;
 }
 
-bool MiniDB::remove(const std::string &key)
+bool pearDB::remove(const std::string &key)
 {
     std::lock_guard<std::mutex> lock(db_mutex);
 
     if (!memtable->contains(key) && !index->contains(key))
     {
-        std::cout << "[MiniDB] key not found..." << std::endl;
+        std::cout << "[pearDB] key not found..." << std::endl;
         return false;
     }
 
@@ -129,7 +129,7 @@ bool MiniDB::remove(const std::string &key)
     return true;
 }
 
-void MiniDB::flushMemtableInternal()
+void pearDB::flushMemtableInternal()
 {
     if (memtable->isEmpty())
         return;
@@ -150,7 +150,7 @@ void MiniDB::flushMemtableInternal()
         }
     }
 
-    std::cout << "[MiniDB] Memtable flushed successfully..." << std::endl;
+    std::cout << "[pearDB] Memtable flushed successfully..." << std::endl;
 
     memtable->clear();
 
@@ -158,13 +158,13 @@ void MiniDB::flushMemtableInternal()
 }
 
 // TODO: why expose flush memtable - why not just call flush memtable internal
-void MiniDB::flushMemtable()
+void pearDB::flushMemtable()
 {
     std::lock_guard<std::mutex> lock(db_mutex);
     flushMemtableInternal();
 }
 
-std::vector<std::pair<std::string, std::string>> MiniDB::range(const std::string &start, const std::string &end)
+std::vector<std::pair<std::string, std::string>> pearDB::range(const std::string &start, const std::string &end)
 {
     auto *btree = dynamic_cast<BTreeIndex *>(index.get());
 
@@ -219,7 +219,7 @@ std::vector<std::pair<std::string, std::string>> MiniDB::range(const std::string
     return {result.begin(), result.end()}; // TODO: Inspect
 }
 
-void MiniDB::buildIndex()
+void pearDB::buildIndex()
 {
     auto all_records = segment_manager->readAll();
 
@@ -236,7 +236,7 @@ void MiniDB::buildIndex()
     }
 }
 
-void MiniDB::recoverFromWAL()
+void pearDB::recoverFromWAL()
 {
     if (wal->isEmpty())
         return;
@@ -264,7 +264,7 @@ void MiniDB::recoverFromWAL()
     // clear wal after memtable flushed
 }
 
-void MiniDB::compact()
+void pearDB::compact()
 {
     {
         std::lock_guard<std::mutex> lock(db_mutex);
@@ -273,28 +273,28 @@ void MiniDB::compact()
     segment_manager->compact(*index);
 }
 
-size_t MiniDB::indexSize() const
+size_t pearDB::indexSize() const
 {
     return index->size();
 }
 
-size_t MiniDB::getSegmentCount() const
+size_t pearDB::getSegmentCount() const
 {
     return segment_manager->segmentCount();
 }
 
-std::vector<std::string> MiniDB::keys() const
+std::vector<std::string> pearDB::keys() const
 {
     // get the keys in the index
     return index->keys();
 }
 
-size_t MiniDB::getMemtableSize() const
+size_t pearDB::getMemtableSize() const
 {
     return memtable->sizeBytes();
 }
 
-size_t MiniDB::getWALSize() const
+size_t pearDB::getWALSize() const
 {
     return wal->size();
 }

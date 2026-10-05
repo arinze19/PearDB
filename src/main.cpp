@@ -2,9 +2,9 @@
 #include <string>
 #include "db.h"
 
-void printHelp(MiniDB::IndexType type)
+void printHelp(pearDB::IndexType type)
 {
-    std::cout << "\n=== MiniDB Commands ===\n";
+    std::cout << "\n=== pearDB Commands ===\n";
     std::cout << "  set <key> <value>  - Store a key-value pair\n";
     std::cout << "  get <key>          - Retrieve a value\n";
     std::cout << "  del <key>          - Delete a key\n";
@@ -14,45 +14,45 @@ void printHelp(MiniDB::IndexType type)
     std::cout << "  stats              - Show DB statistics\n";
     std::cout << "  crash              - Simulate crash (WAL testing)\n";
     std::cout << "  clear              - Clear Terminal\n";
-    if (type == MiniDB::IndexType::BTREE)
+    if (type == pearDB::IndexType::BTREE)
     {
         std::cout << " range <start> <end> - Get all keys in a certain range (inclusive of start and end) \n";
     }
     std::cout << "  help               - Show this message\n";
-    std::cout << "  exit               - Quit MiniDB\n";
+    std::cout << "  exit               - Quit pearDB\n";
     std::cout << "=======================\n\n";
 }
 
 // terminal flags | Didn't know about that
 int main(int argc, char *argv[])
 {
-    std::cout << "=== MiniDB v0.2 ===\n";
+    std::cout << "=== pearDB v0.2 ===\n";
     std::cout << "Type 'help' for commands\n\n";
 
-    MiniDB::IndexType indexType = MiniDB::IndexType::HASH; // Default to hash
+    pearDB::IndexType indexType = pearDB::IndexType::HASH; // Default to hash
 
     for (int i = 1; i < argc; i++)
     {
         std::string arg = argv[i];
         if (arg == "--index=btree")
         {
-            indexType = MiniDB::IndexType::BTREE;
-            std::cout << "[MiniDB] Using BTree index\n";
+            indexType = pearDB::IndexType::BTREE;
+            std::cout << "[pearDB] Using BTree index\n";
         }
         else if (arg == "--index=hash")
         {
-            indexType = MiniDB::IndexType::HASH;
-            std::cout << "[MiniDB] Using Hash index\n";
+            indexType = pearDB::IndexType::HASH;
+            std::cout << "[pearDB] Using Hash index\n";
         }
     }
 
-    MiniDB db("./data", indexType);
+    pearDB db("./data", indexType);
 
     std::string current_command;
 
     while (true)
     {
-        std::cout << "minidb> ";
+        std::cout << "pearDB> ";
         std::cin >> current_command;
 
         if (current_command == "set")
@@ -119,9 +119,9 @@ int main(int argc, char *argv[])
         }
         else if (current_command == "compact")
         {
-            std::cout << "[MiniDB]: Starting compaction process..." << std::endl;
+            std::cout << "[pearDB]: Starting compaction process..." << std::endl;
             db.compact();
-            std::cout << "[MiniDB]: Finished compaction process, segments count now " << db.getSegmentCount() << std::endl;
+            std::cout << "[pearDB]: Finished compaction process, segments count now " << db.getSegmentCount() << std::endl;
         }
         else if (current_command == "stats")
         {
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
             std::cout << "Segments: " << db.getSegmentCount() << "\n";
             std::cout << "Memtable: " << db.getMemtableSize() << " bytes" << "\n";
             std::cout << "WAL: " << db.getWALSize() << " bytes" << "\n";
-            std::cout << "Index Type: " << (indexType == MiniDB::IndexType::BTREE ? "BTree" : "Hash") << " index" << "\n";
+            std::cout << "Index Type: " << (indexType == pearDB::IndexType::BTREE ? "BTree" : "Hash") << " index" << "\n";
         }
         else if (current_command == "crash")
         {

@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 // Helper - clean test directory before each test
 static std::string makeTestDir(const std::string &name)
 {
-    std::string path = "/tmp/minidb_test_" + name;
+    std::string path = "/tmp/pearDB_test_" + name;
     if (fs::exists(path))
         fs::remove_all(path);
     return path;
@@ -18,7 +18,7 @@ static std::string makeTestDir(const std::string &name)
 TEST(db_hash_put_and_get)
 {
     auto dir = makeTestDir("put_get");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     db.put("name", "Arinze");
     auto result = db.get("name");
@@ -30,7 +30,7 @@ TEST(db_hash_put_and_get)
 TEST(db_hash_get_missing_key)
 {
     auto dir = makeTestDir("missing");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     auto result = db.get("ghost");
     ASSERT_FALSE(result.has_value());
@@ -39,7 +39,7 @@ TEST(db_hash_get_missing_key)
 TEST(db_hash_overwrite_key)
 {
     auto dir = makeTestDir("overwrite");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     db.put("key", "old_value");
     db.put("key", "new_value");
@@ -52,7 +52,7 @@ TEST(db_hash_overwrite_key)
 TEST(db_hash_delete_key)
 {
     auto dir = makeTestDir("delete");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     db.put("key", "value");
     db.remove("key");
@@ -64,7 +64,7 @@ TEST(db_hash_delete_key)
 TEST(db_hash_delete_nonexistent)
 {
     auto dir = makeTestDir("del_nonexist");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     // Should not throw!
     db.remove("ghost_key");
@@ -74,7 +74,7 @@ TEST(db_hash_delete_nonexistent)
 TEST(db_hash_multiple_keys)
 {
     auto dir = makeTestDir("multi");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     db.put("a", "1");
     db.put("b", "2");
@@ -91,7 +91,7 @@ TEST(db_hash_persists_after_flush)
     auto dir = makeTestDir("persist_flush");
 
     {
-        MiniDB db(dir, MiniDB::IndexType::HASH);
+        pearDB db(dir, pearDB::IndexType::HASH);
         db.put("name", "Arinze");
         db.put("city", "Lagos");
         db.flushMemtable();
@@ -99,7 +99,7 @@ TEST(db_hash_persists_after_flush)
     }
 
     // Reopen - data should still be there!
-    MiniDB db2(dir, MiniDB::IndexType::HASH);
+    pearDB db2(dir, pearDB::IndexType::HASH);
     ASSERT_EQ(*db2.get("name"), "Arinze");
     ASSERT_EQ(*db2.get("city"), "Lagos");
 }
@@ -110,7 +110,7 @@ TEST(db_crash_recovery_via_wal)
 
     // Write WITHOUT flushing (simulates in-memory only state)
     {
-        MiniDB db(dir, MiniDB::IndexType::HASH);
+        pearDB db(dir, pearDB::IndexType::HASH);
         db.put("crash_key", "crash_value");
         db.put("another", "data");
         // Destructor flushes automatically, so we need to
@@ -119,7 +119,7 @@ TEST(db_crash_recovery_via_wal)
     }
 
     // Destructor flushed, so on restart data is on disk
-    MiniDB db2(dir, MiniDB::IndexType::HASH);
+    pearDB db2(dir, pearDB::IndexType::HASH);
     ASSERT_EQ(*db2.get("crash_key"), "crash_value");
     ASSERT_EQ(*db2.get("another"), "data");
 }
@@ -127,7 +127,7 @@ TEST(db_crash_recovery_via_wal)
 TEST(db_memtable_read_before_flush)
 {
     auto dir = makeTestDir("memtable_read");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     // Data only in memtable, not flushed to disk yet!
     db.put("fresh", "data");
@@ -144,7 +144,7 @@ TEST(db_memtable_read_before_flush)
 TEST(db_btree_put_and_get)
 {
     auto dir = makeTestDir("btree_put");
-    MiniDB db(dir, MiniDB::IndexType::BTREE);
+    pearDB db(dir, pearDB::IndexType::BTREE);
 
     db.put("key", "value");
     ASSERT_EQ(*db.get("key"), "value");
@@ -153,7 +153,7 @@ TEST(db_btree_put_and_get)
 TEST(db_btree_range_query)
 {
     auto dir = makeTestDir("btree_range");
-    MiniDB db(dir, MiniDB::IndexType::BTREE);
+    pearDB db(dir, pearDB::IndexType::BTREE);
 
     db.put("apple", "1");
     db.put("banana", "2");
@@ -174,7 +174,7 @@ TEST(db_btree_range_query)
 TEST(db_btree_range_empty_result)
 {
     auto dir = makeTestDir("btree_range_empty");
-    MiniDB db(dir, MiniDB::IndexType::BTREE);
+    pearDB db(dir, pearDB::IndexType::BTREE);
 
     db.put("apple", "1");
     db.put("banana", "2");
@@ -188,7 +188,7 @@ TEST(db_btree_range_empty_result)
 TEST(db_btree_keys_sorted)
 {
     auto dir = makeTestDir("btree_sorted");
-    MiniDB db(dir, MiniDB::IndexType::BTREE);
+    pearDB db(dir, pearDB::IndexType::BTREE);
 
     db.put("zebra", "z");
     db.put("apple", "a");
@@ -205,7 +205,7 @@ TEST(db_btree_keys_sorted)
 TEST(db_hash_range_throws)
 {
     auto dir = makeTestDir("hash_range_err");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     bool threw = false;
     try
@@ -224,7 +224,7 @@ TEST(db_hash_range_throws)
 TEST(db_compact_removes_duplicates)
 {
     auto dir = makeTestDir("compact_dup");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     // Write same key multiple times
     db.put("key", "v1");
@@ -242,7 +242,7 @@ TEST(db_compact_removes_duplicates)
 TEST(db_compact_removes_tombstones)
 {
     auto dir = makeTestDir("compact_tomb");
-    MiniDB db(dir, MiniDB::IndexType::HASH);
+    pearDB db(dir, pearDB::IndexType::HASH);
 
     db.put("alive", "yes");
     db.put("dead", "bye");

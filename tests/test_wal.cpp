@@ -1,6 +1,13 @@
 #include "test_framework.h"
+#include "db.h"
 #include "storage/wal.h"
+#include <algorithm>
+#include <chrono>
 #include <filesystem>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -127,4 +134,55 @@ TEST(wal_size_increases_with_entries) {
     ASSERT(wal.size() > size1);
 
     cleanupWAL(path);
+}
+
+TEST(wal_rebuild_memtable_median_latency_after_50_crashes)
+{
+    constexpr size_t record_count = 100000;
+    constexpr size_t record_payload_bytes = 16;
+    constexpr size_t memtable_entry_overhead = 64;
+    constexpr size_t wal_record_overhead = 1 + sizeof(uint32_t) + sizeof(uint32_t);
+    const std::string dir = "/tmp/pearDB_test_wal_recovery_latency";
+    const std::string wal_path = dir + "/wal.log";
+
+    if (fs::exists(dir))
+        fs::remove_all(dir);
+    fs::create_directories(dir);
+
+    {
+        WAL wal(wal_path);
+        for (size_t i = 0; i < record_count; ++i)
+        {
+            std::ostringstream key;
+            std::ostringstream value;
+            key << 'k' << std::setw(7) << std::setfill('0') << i;
+            value << 'v' << std::setw(7) << std::setfill('0') << i;
+            wal.logPut(key.str(), value.str());
+        }
+
+        const size_t expected_size = record_count * (wal_record_overhead + record_payload_bytes);
+        ASSERT_EQ(wal.size(), expected_size);
+    }
+
+    std::vector<long long> recovery_latencies_us;
+    recovery_latencies_us.reserve(50);
+
+    for (size_t crash = 0; crash < 50; ++crash)
+    {
+        const auto start = std::chrono::steady_clock::now();
+        pearDB db(dir, pearDB::IndexType::HASH);
+        const auto end = std::chrono::steady_clock::now();
+
+        ASSERT_EQ(db.getMemtableSize(),
+              record_count * (record_payload_bytes + memtable_entry_overhead));
+        recovery_latencies_us.push_back(
+            std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+    }
+
+    std::sort(recovery_latencies_us.begin(), recovery_latencies_us.end());
+    const long long median_latency_us = recovery_latencies_us[recovery_latencies_us.size() / 2];
+    std::cout << "[ PERF ] WAL recovery median over 50 crashes: "
+              << median_latency_us << " us\n";
+
+    fs::remove_all(dir);
 }

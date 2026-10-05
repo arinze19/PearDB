@@ -8,7 +8,7 @@
 #include "storage/wal.h"
 #include "index/hash_index.h"
 
-class MiniDB
+class pearDB
 {
 public:
     // Determine index type to use for DB
@@ -18,14 +18,14 @@ public:
         BTREE
     };
 
-    explicit MiniDB(const std::string &data_dir, IndexType index = IndexType::HASH);
+    explicit pearDB(const std::string &data_dir, IndexType index = IndexType::HASH);
 
     /**
      * If your class is meant to be inherited from,
      * you must define a virtual destructor so derived objects
      * are destroyed properly through base-class pointers:
      */
-    ~MiniDB() = default;
+    ~pearDB() = default;
 
     void put(const std::string &key, const std::string &value);
 

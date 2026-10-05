@@ -76,12 +76,12 @@ struct BenchResult {
 
 BenchResult runBenchmark(
     const std::string& dir,
-    MiniDB::IndexType type,
+    pearDB::IndexType type,
     size_t num_ops,
     const std::vector<std::pair<std::string, std::string>>& data
 ) {
     if (std::filesystem::exists(dir)) std::filesystem::remove_all(dir);
-    MiniDB db(dir, type);
+    pearDB db(dir, type);
 
     BenchResult result;
     result.ops = num_ops;
@@ -130,7 +130,7 @@ int main() {
 
     std::cout << "\n";
     std::cout << "╔══════════════════════════════════════════════════════════╗\n";
-    std::cout << "║               MiniDB Benchmark Suite                     ║\n";
+    std::cout << "║               pearDB Benchmark Suite                     ║\n";
     std::cout << "╚══════════════════════════════════════════════════════════╝\n\n";
 
     std::cout << "Generating " << NUM_OPS << " random key-value pairs...\n";
@@ -146,14 +146,14 @@ int main() {
 
     // ─── Hash Index ───
     std::cout << "\n[Hash Index]\n";
-    auto hash_result = runBenchmark("/tmp/bench_hash", MiniDB::IndexType::HASH, NUM_OPS, data);
+    auto hash_result = runBenchmark("/tmp/bench_hash", pearDB::IndexType::HASH, NUM_OPS, data);
     printResult("  Sequential Writes",  NUM_OPS, hash_result.write_ms);
     printResult("  Sequential Reads",   NUM_OPS, hash_result.read_ms);
     printResult("  Mixed (50R/50W)",    NUM_OPS, hash_result.mixed_ms);
 
     // ─── BTree Index ───
     std::cout << "\n[BTree Index]\n";
-    auto btree_result = runBenchmark("/tmp/bench_btree", MiniDB::IndexType::BTREE, NUM_OPS, data);
+    auto btree_result = runBenchmark("/tmp/bench_btree", pearDB::IndexType::BTREE, NUM_OPS, data);
     printResult("  Sequential Writes",  NUM_OPS, btree_result.write_ms);
     printResult("  Sequential Reads",   NUM_OPS, btree_result.read_ms);
     printResult("  Mixed (50R/50W)",    NUM_OPS, btree_result.mixed_ms);
@@ -192,7 +192,7 @@ int main() {
     auto large_data = generateData(LARGE_OPS);
 
     if (std::filesystem::exists("/tmp/bench_large")) std::filesystem::remove_all("/tmp/bench_large");
-    MiniDB large_db("/tmp/bench_large", MiniDB::IndexType::HASH);
+    pearDB large_db("/tmp/bench_large", pearDB::IndexType::HASH);
 
     Timer large_timer;
     for (size_t i = 0; i < LARGE_OPS; i++) {

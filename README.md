@@ -1,20 +1,20 @@
-# MiniDB
+# pearDB
 
 A key-value storage engine built from scratch in C++17, inspired by how production databases like LevelDB and RocksDB work internally.
 
 ## Overview
 
-MiniDB implements a **Log-Structured Merge Tree (LSM Tree)** storage engine with a pluggable indexing layer that supports both a **Hash Index** and a **B-Tree Index** — switchable at runtime. The project was built to deeply understand how databases persist, index, and recover data at the systems level.
+pearDB implements a **Log-Structured Merge Tree (LSM Tree)** storage engine with a pluggable indexing layer that supports both a **Hash Index** and a **B-Tree Index** — switchable at runtime. The project was built to deeply understand how databases persist, index, and recover data at the systems level.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   MiniDB Architecture               │
+│                   pearDB Architecture               │
 │                                                     │
 │  CLI / API                                          │
 │      │                                              │
 │      ▼                                              │
 │  ┌────────────────────────────────────┐             │
-│  │            MiniDB Core             │             │
+│  │            pearDB Core             │             │
 │  │                                    │             │
 │  │  ┌──────────┐    ┌─────────────┐   │             │
 │  │  │ Memtable │    │  WAL (log)  │   │             │
@@ -61,8 +61,8 @@ MiniDB implements a **Log-Structured Merge Tree (LSM Tree)** storage engine with
 ### Build
 
 ```bash
-git clone https://github.com/arinze19/minidb
-cd minidb
+git clone https://github.com/arinze19/pearDB
+cd pearDB
 mkdir build && cd build
 cmake ..
 make
@@ -72,10 +72,10 @@ make
 
 ```bash
 # Hash index (default — faster exact lookups)
-./minidb --index=hash
+./pearDB --index=hash
 
 # B-Tree index (supports range queries)
-./minidb --index=btree
+./pearDB --index=btree
 ```
 
 ---
@@ -197,7 +197,7 @@ Before:                       After:
 
 ```bash
 cd build
-./minidb_tests
+./pearDB_tests
 
 # Expected:
 # Passed: 24
@@ -208,7 +208,7 @@ cd build
 ### Running Benchmarks
 
 ```bash
-./minidb_bench
+./pearDB_bench
 ```
 
 ---
@@ -252,7 +252,7 @@ The abstract `Index` interface stores one `size_t` per key. Encoding both the se
 ## Project Structure
 
 ```
-minidb/
+pearDB/
 ├── src/
 │   ├── main.cpp                  # CLI entry point
 │   ├── db.h / db.cpp             # Core database — orchestrates all components
