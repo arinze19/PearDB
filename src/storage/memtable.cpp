@@ -66,8 +66,6 @@ bool Memtable::isEmpty() const
     return table.empty();
 }
 
-// Flush
-// Output is sorted; why important
 std::vector<Record> Memtable::flush()
 {
     std::vector<Record> records;

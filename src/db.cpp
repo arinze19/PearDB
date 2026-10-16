@@ -80,7 +80,6 @@ std::optional<std::string> pearDB::get(const std::string &key)
         return memtable->get(key);
     }
 
-    // index scan
     auto encoded = index->get(key);
 
     if (!encoded.has_value())
@@ -93,7 +92,7 @@ std::optional<std::string> pearDB::get(const std::string &key)
 
     auto record = segment_manager->read(segment_idx, offset);
 
-    if (record->tombstone || !record.has_value())
+    if (!record.has_value() || record->tombstone)
     {
         std::cout << "[pearDB] key not found: " << key << "\n";
         return std::nullopt;
@@ -114,7 +113,7 @@ bool pearDB::remove(const std::string &key)
 
     wal->logDelete(key);
 
-    memtable->remove(key); // when flushed tombstone will supress on disk record
+    memtable->remove(key);
 
     if (index->contains(key))
     {
@@ -260,8 +259,6 @@ void pearDB::recoverFromWAL()
 
     std::cout << "[WAL] Recovery complete! "
               << records.size() << " entries restored to memtable\n";
-
-    // clear wal after memtable flushed
 }
 
 void pearDB::compact()

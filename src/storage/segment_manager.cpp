@@ -147,7 +147,7 @@ void SegmentManager::compact(Index &index)
     std::string segment_path = segmentPath(0);
     std::filesystem::rename(compacted_path, segment_path);
 
-    segments.push_back(std::make_unique<Segment>(compacted_path));
+    segments.push_back(std::make_unique<Segment>(segment_path));
 
     // Clean old indexes
     for (const auto &key : index.keys())
